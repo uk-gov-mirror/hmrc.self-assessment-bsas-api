@@ -20,7 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import v1.controllers.EndpointLogContext
-import v1.models.errors.ErrorWrapper
+import v1.models.errors.{ErrorWrapper, MtdError}
 import v1.models.outcomes.ResponseWrapper
 import v1.models.request.submitBsas.selfEmployment.SubmitSelfEmploymentBsasRequestData
 import v1.models.response.SubmitSelfEmploymentBsasResponse
@@ -34,11 +34,14 @@ trait MockSubmitSelfEmploymentBsasService extends MockFactory {
 
   object MockSubmitSelfEmploymentBsasService {
 
-    def submitSelfEmploymentBsas(requestData: SubmitSelfEmploymentBsasRequestData):
+    val desToMtdErrorMap: Map[String, MtdError] = Map.empty
+
+    def submitSelfEmploymentBsas(desErrorMap: Map[String, MtdError] = desToMtdErrorMap)(requestData: SubmitSelfEmploymentBsasRequestData):
     CallHandler[Future[Either[ErrorWrapper, ResponseWrapper[SubmitSelfEmploymentBsasResponse]]]] = {
       (mockService
-        .submitSelfEmploymentBsas(_: SubmitSelfEmploymentBsasRequestData)(_: HeaderCarrier, _: ExecutionContext, _: EndpointLogContext, _: String))
-        .expects(requestData, *, *, *, *)
+        .submitSelfEmploymentBsas(_: Map[String, MtdError])(_: SubmitSelfEmploymentBsasRequestData)
+        (_: HeaderCarrier, _: ExecutionContext, _: EndpointLogContext, _: String))
+        .expects(*,requestData, *, *, *, *)
     }
   }
 

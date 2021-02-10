@@ -18,6 +18,7 @@ package v1.controllers
 
 import cats.data.EitherT
 import cats.implicits._
+import config.{AppConfig, FeatureSwitch}
 import javax.inject.{Inject, Singleton}
 import play.api.http.MimeTypes
 import play.api.libs.json.{JsValue, Json}
@@ -38,6 +39,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmitSelfEmploymentBsasController @Inject()(val authService: EnrolmentsAuthService,
                                                    val lookupService: MtdIdLookupService,
+                                                   val appConfig: AppConfig,
                                                    requestParser: SubmitSelfEmploymentBsasDataParser,
                                                    service: SubmitSelfEmploymentBsasService,
                                                    hateoasFactory: HateoasFactory,
@@ -54,6 +56,7 @@ class SubmitSelfEmploymentBsasController @Inject()(val authService: EnrolmentsAu
       endpointName = "submitSelfEmploymentBsas"
     )
 
+  //noinspection ScalaStyle
   def submitSelfEmploymentBsas(nino: String, bsasId: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
 
@@ -62,11 +65,20 @@ class SubmitSelfEmploymentBsasController @Inject()(val authService: EnrolmentsAu
         s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] " +
           s"with CorrelationId: $correlationId")
 
+      val featureSwitch = FeatureSwitch(appConfig.featureSwitch)
+
       val rawData = SubmitSelfEmploymentBsasRawData(nino, bsasId, AnyContentAsJson(request.body))
       val result =
         for {
           parsedRequest <- EitherT.fromEither[Future](requestParser.parseRequest(rawData))
-          response      <- EitherT(service.submitSelfEmploymentBsas(parsedRequest))
+          response <- {
+            if (featureSwitch.isV1R5ErrorMappingEnabled) {
+              EitherT(service.submitSelfEmploymentBsas(mappingDesToMtdError)(parsedRequest))
+            }
+            else {
+              EitherT(service.submitSelfEmploymentBsas()(parsedRequest))
+            }
+          }
           hateoasResponse <- EitherT.fromEither[Future](
             hateoasFactory.wrap(
               response.responseData,
@@ -128,6 +140,25 @@ class SubmitSelfEmploymentBsasController @Inject()(val authService: EnrolmentsAu
       case DownstreamError => InternalServerError(Json.toJson(errorWrapper))
     }
   }
+
+  private def mappingDesToMtdError: Map[String, MtdError] = Map(
+    "INVALID_TAXABLE_ENTITY_ID"     -> NinoFormatError,
+    "INVALID_CALCULATION_ID"        -> BsasIdFormatError,
+    "INVALID_PAYLOAD"               -> DownstreamError,
+    "ASC_ID_INVALID"                -> RuleSummaryStatusInvalid,
+    "ASC_ALREADY_SUPERSEDED"        -> RuleSummaryStatusSuperseded,
+    "ASC_ALREADY_ADJUSTED"          -> RuleBsasAlreadyAdjusted,
+    "UNALLOWABLE_VALUE"             -> RuleResultingValueNotPermitted,
+    "INCOMESOURCE_TYPE_NOT_MATCHED" -> RuleNotSelfEmployment,
+    "BVR_FAILURE_C55316"            -> RuleOverConsolidatedExpensesThreshold,
+    "BVR_FAILURE_C15320"            -> RuleTradingIncomeAllowanceClaimed,
+    "BVR_FAILURE_C55503"            -> RuleNotSelfEmployment,
+    "BVR_FAILURE_C55508"            -> RuleNotSelfEmployment,
+    "BVR_FAILURE_C55509"            -> RuleNotSelfEmployment,
+    "NO_DATA_FOUND"                 -> NotFoundError,
+    "SERVER_ERROR"                  -> DownstreamError,
+    "SERVICE_UNAVAILABLE"           -> DownstreamError
+  )
 
   private def auditSubmission(details: GenericAuditDetail)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuditResult] = {
 

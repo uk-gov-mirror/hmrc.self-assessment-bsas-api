@@ -34,13 +34,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SubmitSelfEmploymentBsasService @Inject()(connector: SubmitSelfEmploymentBsasConnector) extends DesResponseMappingSupport with Logging {
 
-  def submitSelfEmploymentBsas(request: SubmitSelfEmploymentBsasRequestData)(
+  def submitSelfEmploymentBsas(desToMtdErrorMap: Map[String, MtdError] = mappingDesToMtdError)(request: SubmitSelfEmploymentBsasRequestData)(
                 implicit hc: HeaderCarrier, ec: ExecutionContext, logContext: EndpointLogContext,
                 correlationId: String):
   Future[Either[ErrorWrapper, ResponseWrapper[SubmitSelfEmploymentBsasResponse]]] = {
 
     val result = for {
-      desResponseWrapper <- EitherT(connector.submitSelfEmploymentBsas(request)).leftMap(mapDesErrors(mappingDesToMtdError))
+      desResponseWrapper <- EitherT(connector.submitSelfEmploymentBsas(request)).leftMap(mapDesErrors(desToMtdErrorMap))
       mtdResponseWrapper <- EitherT.fromEither[Future](validateSubmitSelfEmploymentSuccessResponse(desResponseWrapper))
     } yield mtdResponseWrapper
 

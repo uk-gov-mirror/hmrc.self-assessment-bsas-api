@@ -54,4 +54,9 @@ case class FeatureSwitch(value: Option[Configuration]) {
 
     enabled.getOrElse(false)
   }
+
+  def isV1R5ErrorMappingEnabled: Boolean = value match {
+    case Some(config) => config.getOptional[Boolean] ("v1r5ErrorMapping.enabled").getOrElse(false)
+    case None => false
+  }
 }

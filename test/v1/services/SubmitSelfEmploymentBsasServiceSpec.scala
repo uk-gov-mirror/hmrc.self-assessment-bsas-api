@@ -51,7 +51,7 @@ class SubmitSelfEmploymentBsasServiceSpec extends ServiceSpec {
         MockSubmitSelfEmploymentBsasConnector.submitSelfEmploymentBsas(request)
           .returns(Future.successful(Right(ResponseWrapper(correlationId, response))))
 
-        await(service.submitSelfEmploymentBsas(request)) shouldBe Right(ResponseWrapper(correlationId, response))
+        await(service.submitSelfEmploymentBsas()(request)) shouldBe Right(ResponseWrapper(correlationId, response))
       }
     }
 
@@ -62,7 +62,7 @@ class SubmitSelfEmploymentBsasServiceSpec extends ServiceSpec {
         MockSubmitSelfEmploymentBsasConnector.submitSelfEmploymentBsas(request)
           .returns(Future.successful(Right(ResponseWrapper(correlationId, response.copy(typeOfBusiness = TypeOfBusiness.`uk-property-non-fhl`)))))
 
-        await(service.submitSelfEmploymentBsas(request)) shouldBe Left(ErrorWrapper(correlationId, RuleErrorPropertyAdjusted))
+        await(service.submitSelfEmploymentBsas()(request)) shouldBe Left(ErrorWrapper(correlationId, RuleErrorPropertyAdjusted))
       }
 
       def serviceError(desErrorCode: String, error: MtdError): Unit =
@@ -71,7 +71,7 @@ class SubmitSelfEmploymentBsasServiceSpec extends ServiceSpec {
           MockSubmitSelfEmploymentBsasConnector.submitSelfEmploymentBsas(request)
             .returns(Future.successful(Left(ResponseWrapper(correlationId, DesErrors.single(DesErrorCode(desErrorCode))))))
 
-          await(service.submitSelfEmploymentBsas(request)) shouldBe Left(ErrorWrapper(correlationId, error))
+          await(service.submitSelfEmploymentBsas()(request)) shouldBe Left(ErrorWrapper(correlationId, error))
         }
 
       val input = Seq(
