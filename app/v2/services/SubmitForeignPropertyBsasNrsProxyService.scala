@@ -16,19 +16,17 @@
 
 package v2.services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.models.request.submitBsas.selfEmployment.SubmitSelfEmploymentBsasRequestBody
-import v2.connectors.SubmitSelfEmploymentBsasNrsProxyConnector
+import v2.connectors.SubmitForeignPropertyBsasNrsProxyConnector
+import v2.models.request.submitBsas.foreignProperty.SubmitForeignPropertyBsasRequestBody
 
 import scala.concurrent.ExecutionContext
 
-@Singleton
-class NrsProxyService @Inject()(val connector: SubmitSelfEmploymentBsasNrsProxyConnector) {
+class SubmitForeignPropertyBsasNrsProxyService @Inject()(val connector: SubmitForeignPropertyBsasNrsProxyConnector) {
 
-  def submit(nino: String, body: SubmitSelfEmploymentBsasRequestBody)(implicit hc: HeaderCarrier, ec: ExecutionContext): Unit = {
+  def submit(nino: String, body: SubmitForeignPropertyBsasRequestBody)(implicit hc: HeaderCarrier, ec: ExecutionContext): Unit = {
 
     connector.submit(nino, body)
   }
-
 }

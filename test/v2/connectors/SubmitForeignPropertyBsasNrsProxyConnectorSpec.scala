@@ -19,38 +19,44 @@ package v2.connectors
 import mocks.MockAppConfig
 import utils.DesTaxYear
 import v2.mocks.MockHttpClient
-import v2.models.request.submitBsas.selfEmployment.{Additions, Expenses, Income, SubmitSelfEmploymentBsasRequestBody}
+import v2.models.request.submitBsas.foreignProperty.{ForeignProperty, ForeignPropertyExpenses, ForeignPropertyIncome, SubmitForeignPropertyBsasRequestBody}
 
 import scala.concurrent.Future
 
-class SubmitSelfEmploymentBsasSubmitSelfEmploymentBsasNrsProxyConnectorSpec extends ConnectorSpec {
+class SubmitForeignPropertyBsasNrsProxyConnectorSpec extends ConnectorSpec {
 
   val nino: String = "AA111111A"
 
   val taxYear: DesTaxYear = DesTaxYear.fromMtd("2021-22")
 
-  val income: Income =  Income(Some(100.99), Some(100.99))
-
-  val additions: Additions = Additions(Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99))
-
-  val expenses: Expenses = Expenses(Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99),
-    Some(100.99), Some(100.99), Some(100.99))
-
-  val request: SubmitSelfEmploymentBsasRequestBody =
-    SubmitSelfEmploymentBsasRequestBody(Some(income), Some(additions), Some(expenses))
+  val request: SubmitForeignPropertyBsasRequestBody = {
+    SubmitForeignPropertyBsasRequestBody(
+      Some(Seq(ForeignProperty(
+        "FRA",
+        Some(ForeignPropertyIncome(
+          Some(123.12),
+          Some(123.12),
+          Some(123.12)
+        )),
+        Some(ForeignPropertyExpenses(
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          Some(123.12),
+          consolidatedExpenses = None
+        ))
+      ))),
+      foreignFhlEea = None
+    )
+  }
 
   class Test extends MockHttpClient with MockAppConfig {
 
-    val connector: SubmitSelfEmploymentBsasNrsProxyConnector = new SubmitSelfEmploymentBsasNrsProxyConnector(
+    val connector: SubmitForeignPropertyBsasNrsProxyConnector = new SubmitForeignPropertyBsasNrsProxyConnector(
       http = mockHttpClient,
       appConfig = mockAppConfig
     )
@@ -74,3 +80,4 @@ class SubmitSelfEmploymentBsasSubmitSelfEmploymentBsasNrsProxyConnectorSpec exte
     }
   }
 }
+
