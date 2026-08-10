@@ -104,7 +104,7 @@ class ListBsasConnectorSpec extends ConnectorSpec {
     protected def downstreamQueryParams: Seq[(String, String)]
 
     ((() => mockAppConfig.isHipMigration1898Enabled)).expects().returning(false).anyNumberOfTimes()
-    
+
     protected val request: ListBsasRequestData =
       Def2_ListBsasRequestData(nino, taxYear, Some(BusinessId(incomeSourceId)), Some(incomeSourceType))
 
