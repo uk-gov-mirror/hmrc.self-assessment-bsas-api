@@ -32,15 +32,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class ListBsasConnector @Inject() (val http: HttpClientV2, val appConfig: AppConfig) extends BaseDownstreamConnector {
 
   def listBsas(request: ListBsasRequestData)(implicit
-                                             hc: HeaderCarrier,
-                                             ec: ExecutionContext,
-                                             correlationId: String): Future[DownstreamOutcome[ListBsasResponse]] = {
+      hc: HeaderCarrier,
+      ec: ExecutionContext,
+      correlationId: String): Future[DownstreamOutcome[ListBsasResponse]] = {
 
     import request.*
     import schema.*
 
     val queryParams = Map(
-      "incomeSourceId" -> incomeSourceId.map(_.businessId),
+      "incomeSourceId"   -> incomeSourceId.map(_.businessId),
       "incomeSourceType" -> incomeSourceType
     )
 
@@ -74,4 +74,5 @@ class ListBsasConnector @Inject() (val http: HttpClientV2, val appConfig: AppCon
       )
     }
   }
+
 }
