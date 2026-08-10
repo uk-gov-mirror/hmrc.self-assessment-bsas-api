@@ -43,22 +43,24 @@ class ListBsasService @Inject() (connector: ListBsasConnector) extends BaseServi
 
   private val errorMap: Map[String, MtdError] = {
     val errors = Map(
-      "INVALID_CORRELATIONID"     -> InternalError,
+      "INVALID_CORRELATIONID" -> InternalError,
       "INVALID_TAXABLE_ENTITY_ID" -> NinoFormatError,
-      "INVALID_TAXYEAR"           -> TaxYearFormatError,
-      "INVALID_INCOMESOURCEID"    -> BusinessIdFormatError,
+      "INVALID_TAXYEAR" -> TaxYearFormatError,
+      "INVALID_INCOMESOURCEID" -> BusinessIdFormatError,
       "INVALID_INCOMESOURCE_TYPE" -> InternalError,
-      "NO_DATA_FOUND"             -> NotFoundError,
-      "SERVER_ERROR"              -> InternalError,
-      "SERVICE_UNAVAILABLE"       -> InternalError
+      "NO_DATA_FOUND" -> NotFoundError,
+      "SERVER_ERROR" -> InternalError,
+      "SERVICE_UNAVAILABLE" -> InternalError
     )
 
     val extraTysErrors = Map(
-      "INVALID_CORRELATION_ID"  -> InternalError,
-      "INVALID_TAX_YEAR"        -> TaxYearFormatError,
+      "INVALID_CORRELATION_ID" -> InternalError,
+      "INVALID_TAX_YEAR" -> TaxYearFormatError,
       "INVALID_INCOMESOURCE_ID" -> BusinessIdFormatError,
-      "NOT_FOUND"               -> NotFoundError,
-      "TAX_YEAR_NOT_SUPPORTED"  -> RuleTaxYearNotSupportedError
+      "INVALID_INCOME_SOURCE_ID" -> BusinessIdFormatError,
+      "INVALID_INCOME_SOURCE_TYPE" -> InternalError,
+      "NOT_FOUND" -> NotFoundError,
+      "TAX_YEAR_NOT_SUPPORTED" -> RuleTaxYearNotSupportedError
     )
 
     errors ++ extraTysErrors

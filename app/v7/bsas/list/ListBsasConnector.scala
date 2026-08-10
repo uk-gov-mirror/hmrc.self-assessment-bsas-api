@@ -17,7 +17,7 @@
 package v7.bsas.list
 
 import api.config.AppConfig
-import api.connectors.DownstreamUri.IfsUri
+import api.connectors.DownstreamUri.{IfsUri, HipUri}
 import api.connectors.httpparsers.StandardDownstreamHttpParser.*
 import api.connectors.{BaseDownstreamConnector, DownstreamOutcome}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,30 +32,46 @@ import scala.concurrent.{ExecutionContext, Future}
 class ListBsasConnector @Inject() (val http: HttpClientV2, val appConfig: AppConfig) extends BaseDownstreamConnector {
 
   def listBsas(request: ListBsasRequestData)(implicit
-      hc: HeaderCarrier,
-      ec: ExecutionContext,
-      correlationId: String): Future[DownstreamOutcome[ListBsasResponse]] = {
+                                             hc: HeaderCarrier,
+                                             ec: ExecutionContext,
+                                             correlationId: String): Future[DownstreamOutcome[ListBsasResponse]] = {
 
     import request.*
     import schema.*
 
     val queryParams = Map(
-      "incomeSourceId"   -> incomeSourceId.map(_.businessId),
+      "incomeSourceId" -> incomeSourceId.map(_.businessId),
       "incomeSourceType" -> incomeSourceType
     )
 
     val mappedQueryParams: Map[String, String] = queryParams.collect { case (k: String, Some(v: String)) => (k, v) }
 
-    if (taxYear.useTaxYearSpecificApi) {
+    if (appConfig.isHipMigration1898Enabled) {
+
+      val hipQueryParams: Map[String, String] =
+        mappedQueryParams ++ Map("taxYear" -> taxYear.asDownstream)
+
+      get(
+        HipUri[DownstreamResp](s"income-tax/adjustable-summary-calculation/$nino"),
+        hipQueryParams.toSeq
+      )
+
+    } else if (taxYear.useTaxYearSpecificApi) {
+
       get(
         IfsUri[DownstreamResp](s"income-tax/adjustable-summary-calculation/${taxYear.asTysDownstream}/$nino"),
         mappedQueryParams.toList
       )
+
     } else {
-      val mappedQueryParamsWithTaxYear: Map[String, String] = mappedQueryParams ++ Map("taxYear" -> taxYear.asDownstream)
-      get(IfsUri[DownstreamResp](s"income-tax/adjustable-summary-calculation/$nino"), mappedQueryParamsWithTaxYear.toSeq)
+
+      val mappedQueryParamsWithTaxYear: Map[String, String] =
+        mappedQueryParams ++ Map("taxYear" -> taxYear.asDownstream)
+
+      get(
+        IfsUri[DownstreamResp](s"income-tax/adjustable-summary-calculation/$nino"),
+        mappedQueryParamsWithTaxYear.toSeq
+      )
     }
-
   }
-
 }
